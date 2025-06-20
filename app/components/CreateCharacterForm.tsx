@@ -3,13 +3,21 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { ChangeEvent } from "react";
 
 export default function CreateCharacterForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [backstory, setBackstory] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,12 +27,38 @@ export default function CreateCharacterForm() {
     // Récupérer l'utilisateur actuellement connecté
     const { data: { user } } = await supabase.auth.getUser();
 
+    let imageUrl = null;
+
     if (user) {
+      // Si une image est sélectionnée, upload sur Supabase Storage
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase
+          .storage
+          .from('characters-images')
+          .upload(fileName, imageFile);
+
+        if (uploadError) {
+          setError("Erreur lors de l'upload de l'image : " + uploadError.message);
+          setLoading(false);
+          return;
+        }
+
+        // Récupérer l'URL publique de l'image
+        const { data } = supabase
+          .storage
+          .from('characters-images')
+          .getPublicUrl(fileName);
+        imageUrl = data.publicUrl;
+      }
+
       // Insérer le personnage dans la base de données
       const { error: insertError } = await supabase.from("characters").insert({
         name: name,
         backstory: backstory,
-        user_id: user.id, // On associe le personnage à l'utilisateur connecté
+        user_id: user.id,
+        avatar_url: imageUrl, // Ajout de l'URL de l'image
       });
 
       if (insertError) {
@@ -55,6 +89,22 @@ export default function CreateCharacterForm() {
           required
           className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
+      </div>
+      <div>
+        <label htmlFor="avatar" className="block text-sm font-medium text-gray-300">
+          Image du personnage (optionnel)
+        </label>
+        <input
+          id="avatar"
+          type="file"
+          accept="image/*"
+          size={5*1024*1024} // Limite de 5 Mo
+          onChange={handleImageChange}
+          className="mt-1 block w-full text-gray-300"
+        />
+        {imageFile && (
+          <p className="text-xs text-gray-400 mt-1">Image sélectionnée : {imageFile.name}</p>
+        )}
       </div>
       <div>
         <label htmlFor="backstory" className="block text-sm font-medium text-gray-300">
