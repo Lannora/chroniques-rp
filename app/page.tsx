@@ -1,6 +1,7 @@
-import { createClient } from "@/lib/supabase/server"; // On importe notre nouveau client serveur
+import { createClient } from "@/lib/supabase/server";
 import LoginButton from "./components/LoginButton";
-import LogoutButton from "./components/LogoutButton"; // On va le créer juste après
+import LogoutButton from "./components/LogoutButton";
+import Link from "next/link";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -21,8 +22,11 @@ export default async function Home() {
             <p className="mt-2 text-lg text-gray-300">
               Prêt à construire des légendes ?
             </p>
-            <div className="mt-8">
-                <LogoutButton />
+            <div className="mt-8 flex items-center justify-center gap-x-4">
+              <Link href="/dashboard/create-character" className="rounded-md bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700">
+                  Créer un personnage
+              </Link>
+              <LogoutButton />
             </div>
           </div>
         ) : (
