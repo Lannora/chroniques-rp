@@ -4,6 +4,8 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { ChangeEvent } from "react";
+import imageCompression from "browser-image-compression";
+import AvatarUpload from "./AvatarUpload";
 
 export default function CreateCharacterForm() {
   const router = useRouter();
@@ -13,11 +15,6 @@ export default function CreateCharacterForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,52 +24,66 @@ export default function CreateCharacterForm() {
     // Récupérer l'utilisateur actuellement connecté
     const { data: { user } } = await supabase.auth.getUser();
 
-    let imageUrl = null;
-
-    if (user) {
-      // Si une image est sélectionnée, upload sur Supabase Storage
-      if (imageFile) {
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${user.id}_${Date.now()}.${fileExt}`;
-        const { data: uploadData, error: uploadError } = await supabase
-          .storage
-          .from('characters-images')
-          .upload(fileName, imageFile);
-
-        if (uploadError) {
-          setError("Erreur lors de l'upload de l'image : " + uploadError.message);
-          setLoading(false);
-          return;
-        }
-
-        // Récupérer l'URL publique de l'image
-        const { data } = supabase
-          .storage
-          .from('characters-images')
-          .getPublicUrl(fileName);
-        imageUrl = data.publicUrl;
-      }
-
-      // Insérer le personnage dans la base de données
-      const { error: insertError } = await supabase.from("characters").insert({
-        name: name,
-        backstory: backstory,
-        user_id: user.id,
-        avatar_url: imageUrl, // Ajout de l'URL de l'image
-      });
-
-      if (insertError) {
-        setError(insertError.message);
-      } else {
-        // Rediriger vers une page de succès ou le dashboard
-        router.push("/dashboard");
-        router.refresh(); // Important pour que le serveur mette à jour les données
-      }
-    } else {
-        setError("Vous devez être connecté pour créer un personnage.");
+    if (!user) {
+      setError("Vous devez être connecté pour créer un personnage.");
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
+    try {
+        let imageUrl = null;
+
+        if (imageFile) {
+            // --- Traitement de l'image ---
+            const options = {
+                maxSizeMB: 1,
+                maxWidthOrHeight: 1024,
+                useWebWorker: true,
+                fileType: 'image/webp',
+            };
+            const compressedFile = await imageCompression(imageFile, options);
+
+            // On force l'extension .webp pour plus de fiabilité
+            const fileName = `${user.id}_${Date.now()}.webp`;
+
+            const { error: uploadError, data: uploadData } = await supabase
+                .storage
+                .from('characters-images')
+                .upload(fileName, compressedFile, { cacheControl: '3600' });
+
+            if (uploadError) {
+                // Si l'erreur vient de l'upload, on la "lance" pour être attrapée par le catch
+                throw uploadError;
+            }
+
+            // On récupère l'URL publique
+            const { data: urlData } = supabase.storage.from('characters-images').getPublicUrl(fileName);
+            imageUrl = urlData.publicUrl;
+        }
+
+        // --- Insertion dans la base de données ---
+        const { error: insertError } = await supabase.from("characters").insert({
+            name: name,
+            backstory: backstory,
+            user_id: user.id,
+            avatar_url: imageUrl,
+        });
+
+        if (insertError) {
+            throw insertError;
+        }
+
+        // Si tout s'est bien passé, on redirige
+        router.push("/dashboard");
+        router.refresh();
+
+    } catch (e: any) {
+        // Un seul bloc 'catch' pour toutes les erreurs (upload, insert, etc.)
+        setError(e.message);
+    } finally {
+        // 'finally' s'exécute toujours, que ça réussisse ou échoue. Parfait pour arrêter le loading.
+        setLoading(false);
+    }
   };
 
   return (
@@ -91,20 +102,10 @@ export default function CreateCharacterForm() {
         />
       </div>
       <div>
-        <label htmlFor="avatar" className="block text-sm font-medium text-gray-300">
-          Image du personnage (optionnel)
-        </label>
-        <input
-          id="avatar"
-          type="file"
-          accept="image/*"
-          size={5*1024*1024} // Limite de 5 Mo
-          onChange={handleImageChange}
-          className="mt-1 block w-full text-gray-300"
-        />
-        {imageFile && (
-          <p className="text-xs text-gray-400 mt-1">Image sélectionnée : {imageFile.name}</p>
-        )}
+        <AvatarUpload 
+        onFileSelect={setImageFile} // On met à jour l'état imageFile du parent
+        onFileError={setError}      // On met à jour l'état d'erreur du parent
+      />
       </div>
       <div>
         <label htmlFor="backstory" className="block text-sm font-medium text-gray-300">
