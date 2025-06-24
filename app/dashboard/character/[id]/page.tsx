@@ -16,10 +16,11 @@ export default async function CharacterDetailPage({ params }: { params: { id: st
   }
 
   // On récupère UN SEUL personnage dont l'ID correspond à celui dans l'URL
+  const fixParams = await params; 
   const { data: character, error } = await supabase
     .from("characters")
     .select("*")
-    .eq("id", params.id) // La condition : où l'id est égal à params.id
+    .eq("id", fixParams.id) // La condition : où l'id est égal à params.id
     .single(); // On s'attend à recevoir un seul résultat
 
   // Si le personnage n'est pas trouvé (ou n'appartient pas à l'utilisateur grâce à RLS),
