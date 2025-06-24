@@ -42,7 +42,9 @@ export default async function DashboardPage() {
         {characters && characters.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {characters.map((character: Character) => (
-              <CharacterCard key={character.created_at} character={character} />
+              <Link key={character.id} href={`/dashboard/character/${character.id}`}>
+                <CharacterCard character={character} />
+              </Link>
             ))}
           </div>
         ) : (
