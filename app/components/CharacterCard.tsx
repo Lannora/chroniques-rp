@@ -1,12 +1,5 @@
 import Image from "next/image";
-
-// On définit le "type" de l'objet character pour que TypeScript soit content
-export type Character = {
-  id: number;
-  name: string | null;
-  avatar_url: string | null;
-  created_at: string;
-};
+import { Character } from "@/lib/types";
 
 export default function CharacterCard({ character }: { character: Character }) {
   return (

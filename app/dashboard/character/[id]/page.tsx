@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import DeleteCharacterButton from "@/app/components/DeleteCharacterButton";
 
 // La page reçoit les "params" de l'URL en props
 export default async function CharacterDetailPage({ params }: { params: { id: string } }) {
@@ -55,6 +56,22 @@ export default async function CharacterDetailPage({ params }: { params: { id: st
               <p className="text-gray-300 whitespace-pre-wrap">
                 {character.backstory}
               </p>
+            </div>
+            <div className="mt-6 border-t border-gray-700 pt-6">
+              <h3 className="text-lg font-semibold text-gray-400 mb-4">Actions</h3>
+              <div className="flex gap-x-4">
+                <Link 
+                  href={`/dashboard/character/${character.id}/edit`}
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Modifier le personnage
+                </Link>
+                <DeleteCharacterButton characterId={character.id} />
+              </div>
+              <div className="flex gap-x-4">
+                  {/* On passe l'ID du personnage au composant bouton */}
+                  <DeleteCharacterButton characterId={character.id} />
+              </div>
             </div>
           </div>
         </div>
