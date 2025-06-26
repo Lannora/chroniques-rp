@@ -5,12 +5,13 @@ import type { ChangeEvent } from "react";
 
 // On définit les "props" que le composant accepte
 interface AvatarUploadProps {
+  initialPreviewUrl?: string | null;
   onFileSelect: (file: File) => void;
   onFileError: (error: string) => void;
 }
 
-export default function AvatarUpload({ onFileSelect, onFileError }: AvatarUploadProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+export default function AvatarUpload({ initialPreviewUrl, onFileSelect, onFileError }: AvatarUploadProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialPreviewUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
