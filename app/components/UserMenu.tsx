@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "./LogoutButton";
 import Image from "next/image";
+import Link from "next/link";
 
 // C'est un Server Component asynchrone pour pouvoir récupérer l'utilisateur
 export default async function UserMenu() {
@@ -28,6 +29,7 @@ export default async function UserMenu() {
         <span className="text-sm font-semibold text-white">
           {user.user_metadata?.full_name || user.email}
         </span>
+        <Link href="/dashboard/settings" className="text-sm font-medium text-gray-300 hover:text-white transition">Parametres</Link>
       </div>
       <LogoutButton />
     </div>
