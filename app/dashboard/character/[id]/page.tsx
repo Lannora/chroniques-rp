@@ -13,7 +13,7 @@ export default async function CharacterDetailPage({ params }: { params: { id: st
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/");
   }
 
   // On récupère UN SEUL personnage dont l'ID correspond à celui dans l'URL
