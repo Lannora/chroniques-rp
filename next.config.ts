@@ -27,6 +27,8 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
       formats: ["image/avif", "image/webp"],
   },
+  // Configuration pour les environnements de développement
+  allowedDevOrigin: ["http://localhost:3000", "http://192.168.1.59:3000"],
 }
 
 export default nextConfig;
