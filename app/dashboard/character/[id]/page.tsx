@@ -66,7 +66,7 @@ export default async function CharacterDetailPage({ params }: { params: { id: st
                 >
                   Modifier le personnage
                 </Link>
-                <DeleteCharacterButton characterId={character.id} />
+                <DeleteCharacterButton characterId={character.id} avatarUrl={character.avatar_url}/>
               </div>
             </div>
           </div>
