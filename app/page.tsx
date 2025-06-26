@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import LoginButton from "./components/LoginButton";
 import LogoutButton from "./components/LogoutButton";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -10,11 +11,25 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (user) {
+    //On vérifie si l'utilisateur a des personnages
+    const { data: characters, error } = await supabase
+      .from("characters")
+      .select("id") // On a juste besoin de savoir s'il y en a, pas besoin de toutes les données
+      .limit(1); // On s'arrête dès qu'on en a trouvé un, c'est plus performant
+
+    // Si on trouve au moins un personnage, on redirige vers le dashboard
+    if (characters && characters.length > 0) {
+      redirect("/dashboard");
+    }
+    // Si la redirection n'a pas lieu, le reste de la page s'affiche normalement.
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-900 text-white">
       <div className="text-center">
         {user ? (
-          // Contenu si l'utilisateur EST connecté
+          // Ce contenu ne s'affiche maintenant QUE pour les utilisateurs connectés SANS personnage
           <div>
             <h1 className="text-4xl font-bold">
               Bonjour, {user.user_metadata.full_name || user.email}

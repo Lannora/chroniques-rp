@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import CharacterCard, { type Character } from "@/app/components/CharacterCard";
+import { Character } from "@/lib/types";
+import CharacterCard from "@/app/components/CharacterCard"; 
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function DashboardPage() {
 
   // Si aucun utilisateur n'est connecté, on le redirige vers la page de connexion
   if (!user) {
-    redirect("/login"); // Assure-toi d'avoir une page /login ou change pour '/'
+    redirect("/");
   }
 
   // On récupère les personnages de l'utilisateur connecté

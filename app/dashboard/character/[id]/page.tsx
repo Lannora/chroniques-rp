@@ -68,10 +68,6 @@ export default async function CharacterDetailPage({ params }: { params: { id: st
                 </Link>
                 <DeleteCharacterButton characterId={character.id} />
               </div>
-              <div className="flex gap-x-4">
-                  {/* On passe l'ID du personnage au composant bouton */}
-                  <DeleteCharacterButton characterId={character.id} />
-              </div>
             </div>
           </div>
         </div>
