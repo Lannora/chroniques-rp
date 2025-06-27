@@ -33,6 +33,12 @@ export default async function DashboardPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold">Mon Tableau de Bord</h1>
           <Link
+                href="/dashboard/relations"
+                className="rounded-md bg-purple-600 px-5 py-3 font-semibold text-white transition hover:bg-purple-700"
+              >
+                Voir les relations
+              </Link>
+          <Link
             href="/dashboard/create-character"
             className="rounded-md bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-700"
           >
