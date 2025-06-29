@@ -36,9 +36,9 @@ export default function CharacterCard({ character }: { character: Character }) {
             
             {/* Informations supplémentaires - Ont mettra a la place le nom du serveurRP Discord*/}
             <div className="flex items-center gap-2 text-sm text-[#f7eeda]/70 mb-3">
-              {character.backstory && (
+              {character.server_name && (
                 <span className="px-2 py-1 bg-[#dba842]/20 text-[#dba842] rounded-md text-xs font-medium border border-[#dba842]/30">
-                  {character.backstory}
+                  {character.server_name}
                 </span>
               )}
             </div>

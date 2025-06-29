@@ -1,23 +1,55 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ChangeEvent } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import imageCompression from "browser-image-compression";
-import AvatarUpload from "./AvatarUpload";
+import AvatarUpload from "./AvatarUpload"; // On garde notre composant d'upload
+import { DiscordServer } from "@/lib/types"; // On importe le type pour les serveurs
 
 export default function CreateCharacterForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [backstory, setBackstory] = useState("");
+
+  // États pour la gestion des serveurs
+  const [servers, setServers] = useState<DiscordServer[]>([]);
+  const [selectedServerId, setSelectedServerId] = useState("");
+  const [isFetchingServers, setIsFetchingServers] = useState(true);
+
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Ce hook se déclenche une seule fois, au chargement du composant
+  useEffect(() => {
+    const fetchServers = async () => {
+      setIsFetchingServers(true);
+      try {
+        const response = await fetch('/api/discord/servers', {
+          method: 'GET',});
+        if (!response.ok) {
+          throw new Error("Impossible de charger la liste des serveurs.");
+        }
+        const data = await response.json();
+        setServers(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsFetchingServers(false);
+      }
+    };
+    fetchServers();
+  }, []); // Le tableau vide signifie "ne s'exécute qu'une fois"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Empêche la soumission si aucun serveur n'est sélectionné
+    if (!selectedServerId) {
+        setError("Veuillez sélectionner un serveur.");
+        return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -25,15 +57,16 @@ export default function CreateCharacterForm() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-      setError("Vous devez être connecté pour créer un personnage.");
+      setError("Vous devez être connecté.");
       setLoading(false);
       return;
     }
 
     try {
-        let imageUrl = null;
+      // Gérer l'upload de l'image
 
-        if (imageFile) {
+      let imageUrl = null;
+      if (imageFile) {
             // --- Traitement de l'image ---
             const options = {
                 maxSizeMB: 1,
@@ -61,21 +94,23 @@ export default function CreateCharacterForm() {
             imageUrl = urlData.publicUrl;
         }
 
-        // --- Insertion dans la base de données ---
-        const { error: insertError } = await supabase.from("characters").insert({
-            name: name,
-            backstory: backstory,
-            user_id: user.id,
-            avatar_url: imageUrl,
-        });
+      // On trouve le nom du serveur qui correspond à l'ID sélectionné
+      const serverName = servers.find(s => s.id === selectedServerId)?.name || "";
 
-        if (insertError) {
-            throw insertError;
-        }
+      // On insère toutes les informations dans la base de données
+      const { error: insertError } = await supabase.from("characters").insert({
+        name,
+        backstory,
+        user_id: user.id,
+        avatar_url: imageUrl,
+        server_id: selectedServerId, // On stocke l'ID
+        server_name: serverName,      // Et le nom pour un affichage facile
+      });
 
-        // Si tout s'est bien passé, on redirige
-        router.push("/dashboard");
-        router.refresh();
+      if (insertError) throw insertError;
+
+      router.push("/dashboard");
+      router.refresh();
 
     } catch (e: any) {
         // Un seul bloc 'catch' pour toutes les erreurs (upload, insert, etc.)
@@ -88,6 +123,10 @@ export default function CreateCharacterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-6">
+      {/* Champ pour l'upload de l'avatar */}
+      <AvatarUpload onFileSelect={setImageFile} onFileError={setError} />
+
+      {/* ... champ pour le nom ... */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-300">
           Nom du personnage
@@ -101,12 +140,32 @@ export default function CreateCharacterForm() {
           className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
+
+      {/* LISTE DÉROULANTE POUR LES SERVEURS */}
       <div>
-        <AvatarUpload 
-        onFileSelect={setImageFile} // On met à jour l'état imageFile du parent
-        onFileError={setError}      // On met à jour l'état d'erreur du parent
-      />
+        <label htmlFor="server" className="block text-sm font-medium text-gray-300">
+          Serveur Discord
+        </label>
+        <select
+          id="server"
+          value={selectedServerId}
+          onChange={(e) => setSelectedServerId(e.target.value)}
+          required
+          disabled={isFetchingServers}
+          className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50"
+        >
+          <option value="" disabled>
+            {isFetchingServers ? "Chargement des serveurs..." : "Sélectionnez un serveur"}
+          </option>
+          {servers.map((server) => (
+            <option key={server.id} value={server.id}>
+              {server.name}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {/* ... champ pour la backstory et bouton ... */}
       <div>
         <label htmlFor="backstory" className="block text-sm font-medium text-gray-300">
           Histoire du personnage (Backstory)

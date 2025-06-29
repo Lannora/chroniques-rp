@@ -8,6 +8,7 @@ export default function LoginButton() {
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'discord',
             options: {
+                scopes: 'identify email guilds guilds.members.read',
                 redirectTo: `${location.origin}/auth/callback`,
             }
         });
