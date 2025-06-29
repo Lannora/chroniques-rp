@@ -9,7 +9,7 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/"); // Redirige vers la page d'accueil après la déconnexion
+    window.location.href = '/'; // Redirige vers la page d'accueil après la déconnexion. Brutal mais efficace !
   };
 
   return (

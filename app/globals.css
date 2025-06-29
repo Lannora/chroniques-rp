@@ -1,1 +1,89 @@
 @import "tailwindcss";
+
+.btn-primary {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  background-color: rgba(219, 168, 66, 0.2);
+  border-width: 1px;
+  border-style: solid;
+  border-color: #dba842;
+  border-radius: 0.75rem;
+  color: #dba842;
+  font-weight: 500;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-primary:hover {
+  background-color: #dba842;
+  color: #02302a;
+  transform: scale(1.05);
+  box-shadow: 0 10px 15px -3px rgba(219, 168, 66, 0.2), 0 4px 6px -4px rgba(219, 168, 66, 0.2);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #02302a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #dba842, #f7eeda);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #f7eeda, #dba842);
+}
+
+/* Sélection de texte personnalisée */
+::selection {
+  background: rgba(219, 168, 66, 0.3);
+  color: #f7eeda;
+}
+
+/* Focus outline personnalisé */
+*:focus {
+  outline: 2px solid #dba842;
+  outline-offset: 2px;
+}
+
+/* Amélioration de la lisibilité */
+body {
+  font-feature-settings: "liga" 1, "kern" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
