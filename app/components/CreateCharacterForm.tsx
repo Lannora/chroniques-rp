@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import imageCompression from "browser-image-compression";
 import AvatarUpload from "./AvatarUpload";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "cmdk";
-import { TRAITS } from "@/lib/traits"; // On importe notre liste de traits
+import { TRAITS } from "@/lib/traits";
 
 type DiscordServer = { id: string; name: string; };
 type MemberDetails = { nick: string | null; user: { global_name: string | null } };
@@ -33,7 +33,7 @@ export default function CreateCharacterForm() {
   // Ref pour éviter de lancer plusieurs fois la récupération des serveurs
   const fetchInitiated = useRef(false);
 
-  // Récupération des serveurs (inchangé)
+  // Récupération des serveurs
   useEffect(() => {
     // On vérifie si notre "mémoire" indique que l'appel a déjà été lancé.
     if (fetchInitiated.current) {
@@ -67,7 +67,7 @@ export default function CreateCharacterForm() {
     if (!selectedServerId) return;
 
     const fetchMemberDetails = async () => {
-      setNickname(null); // Reset
+      setNickname(null);
       try {
         const response = await fetch(`/api/discord/member-details?guild_id=${selectedServerId}`);
         if (!response.ok) throw new Error("Impossible de récupérer le pseudo.");
@@ -84,9 +84,9 @@ export default function CreateCharacterForm() {
   const handleTraitSelect = useCallback((trait: string) => {
     setTraits((currentTraits) => {
       if (currentTraits.includes(trait)) {
-        return currentTraits.filter((t) => t !== trait); // Dé-sélectionne
+        return currentTraits.filter((t) => t !== trait);
       } else {
-        return [...currentTraits, trait]; // Sélectionne
+        return [...currentTraits, trait];
       }
     });
   }, []);
@@ -126,10 +126,10 @@ export default function CreateCharacterForm() {
             // On force l'extension .webp pour plus de fiabilité
             const fileName = `${user.id}_${Date.now()}.webp`;
 
-            const { error: uploadError, data: uploadData } = await supabase
-                .storage
-                .from('characters-images')
-                .upload(fileName, compressedFile, { cacheControl: '3600' });
+        const { error: uploadError, data: uploadData } = await supabase
+          .storage
+          .from('characters-images')
+          .upload(fileName, compressedFile, { cacheControl: '3600' });
 
             if (uploadError) {
                 // Si l'erreur vient de l'upload, on la "lance" pour être attrapée par le catch
@@ -156,7 +156,7 @@ export default function CreateCharacterForm() {
       traits, // On sauvegarde le tableau de traits
     });
 
-    if (insertError) throw insertError;
+      if (insertError) throw insertError;
 
       router.push("/dashboard");
       router.refresh();
@@ -171,110 +171,194 @@ export default function CreateCharacterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl space-y-8">
-      {/* --- Section 1: Avatar et Serveur --- */}
-      <div className="flex flex-col md:flex-row items-center gap-8">
-        <AvatarUpload onFileSelect={setImageFile} onFileError={setError} />
-        <div className="w-full space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#02302a] to-[#024a3f] text-[#f7eeda] overflow-x-hidden py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-2 flex items-center justify-center gap-3">
+            <span className="text-3xl">🎭</span>
+            Créer un nouveau personnage
+          </h1>
+          <p className="text-lg text-[#f7eeda]/70">
+            Donnez vie à votre personnage avec tous ses détails et secrets
+          </p>
+        </div>
 
-          {/* LISTE DÉROULANTE POUR LES SERVEURS */}
-          <div>
-            <label htmlFor="server" className="block text-sm font-medium text-gray-300">
-              Serveur Discord
-            </label>
-            <select
-              id="server"
-              value={selectedServerId}
-              onChange={(e) => setSelectedServerId(e.target.value)}
-              required
-              disabled={isFetchingServers}
-              className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50"
-            >
-              <option value="" disabled>
-                {isFetchingServers ? "Chargement des serveurs..." : "Sélectionnez un serveur"}
-              </option>
-              {servers.map((server) => (
-                <option key={server.id} value={server.id}>
-                  {server.name}
-                </option>
-              ))}
-            </select>
+        {/* Formulaire principal */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-2xl p-8 border border-[#f7eeda]/20">
+          {/* Section 1: Avatar et Serveur */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-[#02302a] mb-6 flex items-center gap-2">
+              <span className="text-xl">🖼️</span>
+              Avatar et Serveur Discord
+            </h2>
+            
+            <div className="flex flex-col lg:flex-row items-start gap-8">
+              <div className="flex-shrink-0">
+                <AvatarUpload onFileSelect={setImageFile} onFileError={setError} />
+              </div>
+              
+              <div className="flex-1 space-y-6">
+                <div>
+                  <label htmlFor="server" className="block text-sm font-semibold text-[#02302a] mb-2">
+                    Serveur Discord
+                  </label>
+                  <select
+                    id="server"
+                    value={selectedServerId}
+                    onChange={(e) => setSelectedServerId(e.target.value)}
+                    required
+                    disabled={isFetchingServers}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-[#02302a]/20 bg-[#f7eeda]/50 text-[#02302a] shadow-sm focus:border-[#dba842] focus:ring-2 focus:ring-[#dba842]/20 focus:outline-none disabled:opacity-50 transition-all duration-200"
+                  >
+                    <option value="" disabled>
+                      {isFetchingServers ? "Chargement des serveurs..." : "Sélectionnez un serveur"}
+                    </option>
+                    {servers.map((server) => (
+                      <option key={server.id} value={server.id}>
+                        {server.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Affichage du pseudo récupéré */}
-          {nickname && (
-            <div className="p-3 bg-gray-700/50 rounded-lg">
-              <p className="text-sm text-gray-400">Nom du personnage sur ce serveur :</p>
-              <p className="text-xl font-bold text-white">{nickname}</p>
+                {nickname && (
+                  <div className="p-4 bg-gradient-to-r from-[#dba842]/10 to-[#dba842]/5 rounded-xl border border-[#dba842]/30">
+                    <p className="text-sm font-medium text-[#02302a]/70 mb-1">Nom du personnage sur ce serveur :</p>
+                    <p className="text-xl font-bold text-[#02302a] flex items-center gap-2">
+                      <span className="text-lg">👤</span>
+                      {nickname}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Traits de personnalité */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-[#02302a] mb-6 flex items-center gap-2">
+              <span className="text-xl">✨</span>
+              Traits de personnalité
+            </h2>
+            
+            <div className="bg-[#f7eeda]/30 rounded-xl p-6 border border-[#02302a]/10">
+              <Command className="max-h-48 overflow-y-auto rounded-lg border-2 border-[#02302a]/20 bg-white shadow-sm">
+                <CommandInput 
+                  placeholder="Rechercher un trait..." 
+                  className="w-full px-4 py-3 bg-transparent focus:outline-none text-[#02302a] placeholder-[#02302a]/50" 
+                />
+                <CommandList>
+                  <CommandEmpty className="py-4 text-center text-[#02302a]/70">
+                    Aucun trait trouvé.
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {TRAITS.map((trait) => (
+                      <CommandItem
+                        key={trait}
+                        onSelect={() => handleTraitSelect(trait)}
+                        className="px-4 py-3 cursor-pointer hover:bg-[#dba842]/10 flex justify-between items-center text-[#02302a] transition-colors duration-150"
+                      >
+                        {trait}
+                        {traits.includes(trait) && (
+                          <span className="text-lg text-[#dba842] font-bold">✓</span>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+
+              <div className="flex flex-wrap gap-2 mt-4">
+                {traits.map((trait) => (
+                  <span 
+                    key={trait} 
+                    className="px-3 py-2 bg-[#dba842] text-[#02302a] rounded-full text-sm font-medium flex items-center gap-2 shadow-sm hover:shadow-md transition-shadow duration-200"
+                  >
+                    {trait}
+                    <button 
+                      type="button" 
+                      onClick={() => handleTraitSelect(trait)} 
+                      className="font-bold hover:text-red-600 transition-colors duration-150"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Backstory et Secrets */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold text-[#02302a] mb-6 flex items-center gap-2">
+              <span className="text-xl">📚</span>
+              Histoire et Secrets
+            </h2>
+            
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="backstory" className="block text-sm font-semibold text-[#02302a] mb-2">
+                  Histoire du personnage (Backstory)
+                </label>
+                <textarea
+                  id="backstory"
+                  value={backstory}
+                  onChange={(e) => setBackstory(e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#02302a]/20 bg-[#f7eeda]/30 text-[#02302a] shadow-sm focus:border-[#dba842] focus:ring-2 focus:ring-[#dba842]/20 focus:outline-none transition-all duration-200 resize-none"
+                  placeholder="Racontez l'histoire de votre personnage, son passé, ses motivations..."
+                />
+              </div>
+
+              <div>
+                <label htmlFor="secrets" className="block text-sm font-semibold text-[#02302a] mb-2">
+                  Secrets du personnage
+                </label>
+                <textarea
+                  id="secrets"
+                  value={secrets}
+                  onChange={(e) => setSecrets(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#02302a]/20 bg-[#f7eeda]/30 text-[#02302a] shadow-sm focus:border-[#dba842] focus:ring-2 focus:ring-[#dba842]/20 focus:outline-none transition-all duration-200 resize-none"
+                  placeholder="Les secrets que seuls vous connaissez sur votre personnage..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Messages d'erreur */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+              <p className="text-sm text-red-700 flex items-center gap-2">
+                <span className="text-lg">⚠️</span>
+                {error}
+              </p>
             </div>
           )}
-        </div>
-        </div>
-      </div>
 
-      {/* --- Section 2: Traits de personnalité --- */}
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Traits de personnalité</label>
-        <Command className="max-h-48 overflow-y-auto rounded-lg border border-gray-600 bg-gray-800 text-white">
-          <CommandInput placeholder="Rechercher un trait..." className="w-full px-4 py-2 bg-transparent focus:outline-none" />
-          <CommandList>
-            <CommandEmpty>Aucun trait trouvé.</CommandEmpty>
-            <CommandGroup>
-              {TRAITS.map((trait) => (
-                <CommandItem
-                  key={trait}
-                  onSelect={() => handleTraitSelect(trait)}
-                  className="px-4 py-2 cursor-pointer hover:bg-gray-700 flex justify-between items-center"
-                >
-                  {trait}
-                  {traits.includes(trait) && <span className="text-lg text-green-400">✓</span>}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-        <div className="flex flex-wrap gap-2 mt-3">
-          {traits.map((trait) => (
-            <span key={trait} className="px-2 py-1 bg-blue-600 text-white rounded-full text-sm flex items-center gap-2">
-              {trait}
-              <button type="button" onClick={() => handleTraitSelect(trait)} className="font-bold">×</button>
-            </span>
-          ))}
-        </div>
+          {/* Bouton de soumission */}
+          <div className="flex justify-center">
+            <button 
+              type="submit" 
+              disabled={loading || !nickname}
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-3"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-[#02302a]/30 border-t-[#02302a] rounded-full animate-spin"></div>
+                  Création en cours...
+                </>
+              ) : (
+                <>
+                  <span className="text-xl">🎭</span>
+                  Créer le personnage
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-
-      {/* --- Section 3: Backstory et Secrets --- */}
-      <div>
-        <label htmlFor="backstory" className="block text-sm font-medium text-gray-300">
-          Histoire du personnage (Backstory)
-        </label>
-        <textarea
-          id="backstory"
-          value={backstory}
-          onChange={(e) => setBackstory(e.target.value)}
-          rows={6}
-          className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Écrivez l'histoire de votre personnage..."
-        />
-      </div>
-      <div>
-        <label htmlFor="secrets" className="block text-sm font-medium text-gray-300">
-          Secrets du personnage
-        </label>
-        <textarea
-          id="secrets"
-          value={secrets}
-          onChange={(e) => setSecrets(e.target.value)}
-          rows={4}
-          className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          placeholder="Écrivez les secrets que seuls vous connaissez..."
-        />
-      </div>
-
-      {/* --- Bouton de soumission --- */}
-      <button type="submit" disabled={loading} /* ... */ >
-        {loading ? "Création..." : "Créer le personnage"}
-      </button>
-      {error && <p className="text-sm text-red-500">{error}</p>}
-    </form>
+    </div>
   );
 }
